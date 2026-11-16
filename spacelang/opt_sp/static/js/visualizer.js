@@ -6,7 +6,12 @@ export class Visualizer {
     this.stepIndex = 0;
     this.slider = this.root.querySelector("#step-slider");
     this.label = this.root.querySelector("#step-label");
+    this.playButton = this.root.querySelector('[data-step="play"]');
+    this.autoplaySpeed = this.root.querySelector("#autoplay-speed");
+    this.autoplaySpeedLabel = this.root.querySelector("#autoplay-speed-label");
+    this.autoplayTimer = null;
     this.slider.max = String(Math.max(0, trace.length - 1));
+    this.playButton.disabled = trace.length < 2;
   }
 
   _panel(id) {
@@ -98,6 +103,7 @@ export class Visualizer {
     output.scrollTop = output.scrollHeight;
     this.slider.value = String(this.stepIndex);
     this.label.textContent = `Step ${this.stepIndex + 1} / ${this.trace.length}`;
+    if (this.stepIndex === this.trace.length - 1) this._stopAutoplay();
     const previousError = this.root.querySelector(".error-banner");
     if (previousError) previousError.remove();
     if (step.error) {
@@ -111,6 +117,87 @@ export class Visualizer {
     this.root.querySelector('[data-step="back"]').addEventListener("click", () => this.render(this.stepIndex - 1));
     this.root.querySelector('[data-step="forward"]').addEventListener("click", () => this.render(this.stepIndex + 1));
     this.root.querySelector('[data-step="last"]').addEventListener("click", () => this.render(this.trace.length - 1));
+    this.playButton.addEventListener("click", () => {
+      if (this.autoplayTimer === null) this._startAutoplay();
+      else this._stopAutoplay();
+    });
+    this.autoplaySpeed.addEventListener("input", () => {
+      this.autoplaySpeedLabel.textContent = `${(Number(this.autoplaySpeed.value) / 1000).toFixed(1)} s/step`;
+      if (this.autoplayTimer !== null) {
+        this._stopAutoplay();
+        this._startAutoplay();
+      }
+    });
     this.slider.addEventListener("input", () => this.render(Number(this.slider.value)));
+    this._bindPanelResizers();
+  }
+
+  _startAutoplay() {
+    if (this.trace.length < 2) return;
+    if (this.stepIndex === this.trace.length - 1) this.render(0);
+    this.playButton.textContent = "⏸";
+    this.playButton.setAttribute("aria-label", "Pause autoplay");
+    this.playButton.setAttribute("aria-pressed", "true");
+    this.autoplayTimer = window.setInterval(() => {
+      this.render(this.stepIndex + 1);
+      if (this.stepIndex === this.trace.length - 1) this._stopAutoplay();
+    }, Number(this.autoplaySpeed.value));
+  }
+
+  _stopAutoplay() {
+    if (this.autoplayTimer !== null) {
+      window.clearInterval(this.autoplayTimer);
+      this.autoplayTimer = null;
+    }
+    this.playButton.textContent = "▶";
+    this.playButton.setAttribute("aria-label", "Start autoplay");
+    this.playButton.setAttribute("aria-pressed", "false");
+  }
+
+  _bindPanelResizers() {
+    const container = this.root.querySelector(".state-panels");
+    const panels = [...container.querySelectorAll(".panel")];
+    const resizers = [...container.querySelectorAll(".panel-resizer")];
+    const minHeight = 80;
+
+    resizers.forEach((resizer, index) => {
+      const resize = (delta, baseHeights = panels.map((panel) => panel.getBoundingClientRect().height)) => {
+        const heights = [...baseHeights];
+        const available = heights[index] + heights[index + 1];
+        const firstHeight = Math.max(minHeight, Math.min(available - minHeight, heights[index] + delta));
+        heights[index] = firstHeight;
+        heights[index + 1] = available - firstHeight;
+        container.style.gridTemplateRows = heights
+          .flatMap((height, panelIndex) => panelIndex < resizers.length ? [`${height}px`, "8px"] : [`${height}px`])
+          .join(" ");
+        resizer.setAttribute("aria-valuenow", String(Math.round(firstHeight)));
+        resizer.setAttribute("aria-valuemax", String(Math.floor(available - minHeight)));
+      };
+
+      resizer.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        const startY = event.clientY;
+        const baseHeights = panels.map((panel) => panel.getBoundingClientRect().height);
+        const startHeight = baseHeights[index];
+        resizer.setPointerCapture(event.pointerId);
+        const onMove = (moveEvent) => resize(moveEvent.clientY - startY, baseHeights);
+        const onEnd = () => {
+          resizer.removeEventListener("pointermove", onMove);
+          resizer.removeEventListener("pointerup", onEnd);
+          resizer.removeEventListener("pointercancel", onEnd);
+        };
+        resizer.addEventListener("pointermove", onMove);
+        resizer.addEventListener("pointerup", onEnd);
+        resizer.addEventListener("pointercancel", onEnd);
+        resizer.setAttribute("aria-valuenow", String(Math.round(startHeight)));
+      });
+
+      resizer.addEventListener("keydown", (event) => {
+        const direction = event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0;
+        if (!direction) return;
+        event.preventDefault();
+        resize(direction * 16);
+      });
+    });
   }
 }

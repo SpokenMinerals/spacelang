@@ -22,14 +22,23 @@
         <summary>Call Stack</summary>
         <div class="panel-content"></div>
       </details>
+      <div class="panel-resizer" role="separator" aria-orientation="horizontal"
+           aria-label="Resize Call Stack and Operand Stack" aria-valuemin="80"
+           aria-valuemax="10000" aria-valuenow="0" tabindex="0"></div>
       <details id="operand-stack" class="panel" open>
         <summary>Operand Stack</summary>
         <div class="panel-content"></div>
       </details>
+      <div class="panel-resizer" role="separator" aria-orientation="horizontal"
+           aria-label="Resize Operand Stack and Heap / Objects" aria-valuemin="80"
+           aria-valuemax="10000" aria-valuenow="0" tabindex="0"></div>
       <details id="heap" class="panel" open>
         <summary>Heap / Objects</summary>
         <div class="panel-content"></div>
       </details>
+      <div class="panel-resizer" role="separator" aria-orientation="horizontal"
+           aria-label="Resize Heap / Objects and Printed Output" aria-valuemin="80"
+           aria-valuemax="10000" aria-valuenow="0" tabindex="0"></div>
       <details id="output" class="panel" open>
         <summary>Printed Output</summary>
         <div class="panel-content"></div>
@@ -40,6 +49,13 @@
       <button type="button" data-step="back" aria-label="Previous step">⏪</button>
       <button type="button" data-step="forward" aria-label="Next step">⏩</button>
       <button type="button" data-step="last" aria-label="Last step">⏭</button>
+      <button type="button" data-step="play" aria-label="Start autoplay" aria-pressed="false">▶</button>
+      <label class="autoplay-speed">
+        <span>Step delay</span>
+        <input id="autoplay-speed" type="range" min="100" max="3000" step="100" value="800"
+               aria-label="Autoplay delay">
+        <output id="autoplay-speed-label" for="autoplay-speed">0.8 s/step</output>
+      </label>
       <input id="step-slider" type="range" min="0" max="0" value="0" aria-label="Trace step">
       <output id="step-label">Step 0 / 0</output>
     </nav>
