@@ -19,6 +19,12 @@ body {
   color: #e6edf3;
   height: 100vh;
 }
+body[data-page="visualize"] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body[data-page="visualize"] > .app-header { flex: 0 0 auto; }
 
 button, select, textarea { font: inherit; }
 button, select {
@@ -79,7 +85,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 #run-button:hover:not(:disabled) { background: #1d6036; }
 
 .viz-layout {
-  height: calc(100vh - 58px);
+  flex: 1;
+  height: auto;
   min-height: 0;
   padding: .8rem;
   display: grid;
@@ -88,6 +95,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   gap: .8rem;
 }
 .panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -95,10 +104,13 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   border: 1px solid var(--border);
   border-radius: 8px;
 }
-.code-panel { display: flex; flex-direction: column; }
+.code-panel {
+  min-height: 0;
+}
 .code-panel h2 {
   position: sticky;
   top: 0;
+  flex-shrink: 0;
   margin: 0;
   padding: .7rem .85rem;
   background: var(--surface-raised);
@@ -106,8 +118,11 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   font-size: .85rem;
 }
 .code-view {
-  overflow: auto;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: auto !important;
   margin: 0;
   padding: .65rem 0;
   line-height: 1.6;
@@ -119,14 +134,18 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .state-panels {
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(80px, 1fr) 8px minmax(80px, 1fr) 8px minmax(80px, 1fr) 8px minmax(80px, 1fr);
+  grid-template-rows: minmax(0, 1fr) 8px minmax(0, 1fr) 8px minmax(0, 1fr) 8px minmax(0, 1fr);
   gap: .55rem;
-  overflow: auto;
+  overflow: hidden;
 }
-.state-panels .panel { display: flex; flex-direction: column; }
+.state-panels .panel {
+  min-height: 0;
+  min-width: 0;
+}
 .state-panels summary {
   position: sticky;
   top: 0;
+  flex-shrink: 0;
   z-index: 1;
   padding: .65rem .8rem;
   background: var(--surface-raised);
@@ -134,20 +153,55 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   cursor: pointer;
   font-size: .85rem;
 }
+.state-panels .panel > summary {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.state-panels .panel.is-dragging { opacity: .65; }
+.state-panels .panel.is-selected > summary { color: var(--text); }
+.state-panels .panel > summary:active { cursor: grabbing; }
 .panel-resizer {
   min-height: 8px;
   cursor: row-resize;
   touch-action: none;
   border-radius: 4px;
 }
+.panel-resizer[aria-disabled="true"] { cursor: default; }
 .panel-resizer:hover, .panel-resizer:focus-visible { background: var(--accent); outline: none; }
 .panel-content {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: auto !important;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   padding: .55rem .7rem;
+}
+.panel-content,
+.code-view {
+  scrollbar-color: #45515e var(--surface);
+  scrollbar-width: thin;
+}
+.panel-content::-webkit-scrollbar,
+.code-view::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.panel-content::-webkit-scrollbar-track,
+.code-view::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+.panel-content::-webkit-scrollbar-thumb,
+.code-view::-webkit-scrollbar-thumb {
+  background: #45515e;
+  border: 2px solid var(--surface);
+  border-radius: 8px;
+}
+.panel-content::-webkit-scrollbar-thumb:hover,
+.code-view::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .frame {
@@ -235,16 +289,12 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .loading { cursor: progress; }
 
 @media (max-width: 760px) {
-  body { height: auto; min-height: 100vh; }
   .viz-layout {
+    flex: 1;
     height: auto;
-    min-height: calc(100vh - 58px);
+    min-height: 0;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(240px, 42vh) minmax(320px, 1fr) auto;
-  }
-  .state-panels {
-    grid-template-rows: minmax(130px, auto) 8px minmax(130px, auto) 8px minmax(130px, auto) 8px minmax(130px, auto);
-    overflow: visible;
+    grid-template-rows: minmax(0, 42vh) minmax(0, 1fr) auto;
   }
   .step-controls { flex-wrap: wrap; }
 }
